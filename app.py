@@ -12,6 +12,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 from fpdf import FPDF
+from fpdf.fonts import FontFace
 
 BASE = Path(__file__).parent
 QUESTIONS = json.loads((BASE / "questions.json").read_text(encoding="utf-8"))
@@ -257,6 +258,41 @@ def page_result():
         file_name=f"EVM_Result_{u['Mobile']}.pdf", mime="application/pdf")
 
 
+def build_admin_pdf(view: pd.DataFrame, stats: dict, district: str) -> bytes:
+    """Landscape PDF: summary + candidates list (whatever is currently filtered)."""
+    pdf = FPDF(orientation="L", format="A4")
+    pdf.set_auto_page_break(True, 12)
+    pdf.add_page()
+    pdf.set_font("Helvetica", "B", 16)
+    pdf.cell(0, 9, pdf_safe(f"{TITLE} - All Candidates Report"), align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.set_font("Helvetica", "", 10)
+    pdf.cell(0, 6, pdf_safe(f"Generated: {datetime.now():%d-%m-%Y %H:%M}   |   District: {district}"),
+             align="C", new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+    pdf.set_font("Helvetica", "B", 11)
+    pdf.cell(0, 7, pdf_safe(
+        f"Candidates: {stats['n']}   Pass: {stats['pass']}   Fail: {stats['fail']}   "
+        f"Average: {stats['avg']}%"), new_x="LMARGIN", new_y="NEXT")
+    pdf.ln(2)
+
+    cols = ["Name", "Designation", "Mobile", "District", "Email", "Score", "Percent (%)", "Result"]
+    widths = (40, 38, 24, 32, 62, 22, 28, 28)  # total 274 mm
+    pdf.set_font("Helvetica", "", 9)
+    with pdf.table(col_widths=widths, text_align=("LEFT",) * 5 + ("CENTER",) * 3,
+                   line_height=5.5, padding=1) as table:
+        head = table.row()
+        for c in ["Name", "Designation", "Mobile", "District", "Email", "Score", "Percent", "Result"]:
+            head.cell(c, style=FontFace(emphasis="BOLD", fill_color=(220, 230, 245)))
+        for _, r in view.iterrows():
+            row = table.row()
+            for c in cols:
+                v = r[c]
+                if c == "Score":
+                    v = f"{r['Score']}/{r['Total']}"
+                row.cell(pdf_safe(v))
+    return bytes(pdf.output())
+
+
 def to_excel(df: pd.DataFrame) -> bytes:
     buf = BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as w:
@@ -316,11 +352,19 @@ def page_admin():
     st.dataframe(view, width="stretch")
     st.caption(f"Showing {len(view)} of {total} candidates")
 
-    d1, d2 = st.columns([1, 1])
-    d1.download_button("Download Results (Excel)", to_excel(view),
+    stats = {
+        "n": len(view),
+        "pass": int((view["Result"] == "PASS").sum()),
+        "fail": int((view["Result"] == "FAIL").sum()),
+        "avg": round(view["Percent (%)"].mean(), 2),
+    }
+    d1, d2, d3 = st.columns(3)
+    d1.download_button("Download Excel Report", to_excel(view),
                        file_name="EVM_All_Results.xlsx",
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    if d2.button("Refresh"):
+    d2.download_button("Download PDF Report", build_admin_pdf(view, stats, district),
+                       file_name="EVM_All_Results.pdf", mime="application/pdf")
+    if d3.button("Refresh"):
         st.rerun()
 
 
