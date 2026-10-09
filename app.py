@@ -1,10 +1,12 @@
 """EVM Online Exam - Streamlit app
 Run:  streamlit run app.py
 """
+import hmac
 import json
 import re
 import sqlite3
 from datetime import datetime
+from io import BytesIO
 from pathlib import Path
 
 import pandas as pd
@@ -33,13 +35,13 @@ def valid_email(e: str) -> bool:
 
 
 def db():
-    """SQLite connection. Mobile PRIMARY KEY hai, isliye ek mobile se do entry
-    kabhi nahi ho sakti, aur 100 log ek saath submit karein to bhi data safe rehta hai."""
+    """SQLite connection. Mobile is PRIMARY KEY and Email is UNIQUE, so one mobile /
+    one email can never have two attempts, even if many people submit together."""
     con = sqlite3.connect(DB_FILE, timeout=30)
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("""CREATE TABLE IF NOT EXISTS results (
         Mobile TEXT PRIMARY KEY, Timestamp TEXT, Name TEXT, Designation TEXT,
-        District TEXT, Email TEXT, Score INT, Total INT, Percent REAL,
+        District TEXT, Email TEXT UNIQUE, Score INT, Total INT, Percent REAL,
         Correct INT, Wrong INT, "Not Attempted" INT, Result TEXT)""")
     return con
 
@@ -52,10 +54,16 @@ def load_results() -> pd.DataFrame:
         con.close()
 
 
-def already_attempted(mobile: str) -> bool:
+def used_fields(mobile: str, email: str) -> list:
+    """Returns which of mobile / email were already used for an attempt."""
     con = db()
     try:
-        return con.execute("SELECT 1 FROM results WHERE Mobile=?", (mobile,)).fetchone() is not None
+        out = []
+        if con.execute("SELECT 1 FROM results WHERE Mobile=?", (mobile,)).fetchone():
+            out.append("Mobile number")
+        if con.execute("SELECT 1 FROM results WHERE Email=?", (email.lower(),)).fetchone():
+            out.append("Email ID")
+        return out
     finally:
         con.close()
 
@@ -88,14 +96,14 @@ def evaluate(answers: dict) -> dict:
 
 
 def save_result(user: dict, res: dict) -> bool:
-    """True = saved, False = is mobile ka result pehle se hai."""
+    """True = saved, False = this mobile/email has already attempted."""
     con = db()
     try:
         with con:
             con.execute(
                 "INSERT INTO results VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                 (user["Mobile"], datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                 user["Name"], user["Designation"], user["District"], user["Email"],
+                 user["Name"], user["Designation"], user["District"], user["Email"].lower(),
                  res["correct"], res["total"], res["percent"],
                  res["correct"], res["wrong"], res["skipped"], res["result"]))
         return True
@@ -159,26 +167,28 @@ def build_pdf(user: dict, res: dict) -> bytes:
 # ---------------------------------------------------------------- pages
 def page_register():
     st.title("🗳️ " + TITLE)
-    st.caption(f"Total {len(QUESTIONS)} multiple choice questions • Pass marks: {PASS_PERCENT}%")
+    st.caption(f"{len(QUESTIONS)} multiple choice questions • Pass marks: {PASS_PERCENT}% "
+               "• Each mobile number and email ID can be used only once.")
     with st.form("register"):
         name = st.text_input("Name *")
         designation = st.text_input("Designation *")
         mobile = st.text_input("Mobile *", max_chars=10, placeholder="10 digit mobile number")
         district = st.text_input("District Name *")
         email = st.text_input("Email ID *")
-        go = st.form_submit_button("Start Exam ▶", type="primary")
+        go = st.form_submit_button("Start Exam", type="primary")
 
     if go:
         name, designation, district = name.strip(), designation.strip(), district.strip()
         mobile, email = mobile.strip(), email.strip()
         errors = []
-        if not name: errors.append("Name likhna zaroori hai.")
-        if not designation: errors.append("Designation likhna zaroori hai.")
-        if not valid_mobile(mobile): errors.append("Valid 10 digit Mobile number daaliye.")
-        if not district: errors.append("District Name likhna zaroori hai.")
-        if not valid_email(email): errors.append("Valid Email ID daaliye.")
-        if not errors and already_attempted(mobile):
-            errors.append("Is Mobile number se exam pehle hi diya ja chuka hai.")
+        if not name: errors.append("Please enter your Name.")
+        if not designation: errors.append("Please enter your Designation.")
+        if not valid_mobile(mobile): errors.append("Please enter a valid 10 digit Mobile number.")
+        if not district: errors.append("Please enter your District Name.")
+        if not valid_email(email): errors.append("Please enter a valid Email ID.")
+        if not errors:
+            for f in used_fields(mobile, email):
+                errors.append(f"This {f} has already been used to take the exam.")
         if errors:
             for e in errors:
                 st.error(e)
@@ -195,6 +205,8 @@ def page_quiz():
     u = st.session_state.user
     st.title("🗳️ " + TITLE)
     st.info(f"**{u['Name']}** • {u['Designation']} • {u['District']}")
+    st.caption("Select one answer for each question, then press Submit at the bottom. "
+               "You can submit only once.")
 
     with st.form("quiz"):
         for q in QUESTIONS:
@@ -205,13 +217,13 @@ def page_quiz():
                 index=None, key=f"q_{q['id']}", label_visibility="collapsed",
             )
             st.divider()
-        submit = st.form_submit_button("Submit Exam ✅", type="primary")
+        submit = st.form_submit_button("Submit Exam", type="primary")
 
     if submit:
         answers = {q["id"]: st.session_state.get(f"q_{q['id']}") for q in QUESTIONS}
         res = evaluate(answers)
         if not save_result(u, res):
-            st.error("Is Mobile number se exam pehle hi submit ho chuka hai.")
+            st.error("This Mobile number or Email ID has already been used to take the exam.")
             return
         st.session_state.res = res
         st.session_state.stage = "result"
@@ -219,10 +231,11 @@ def page_quiz():
 
 
 def page_result():
+    """Candidate sees ONLY his/her own result (from session) - nobody else's."""
     u, res = st.session_state.user, st.session_state.res
-    st.title("📊 Result")
+    st.title("📊 Your Result")
     (st.success if res["result"] == "PASS" else st.error)(
-        f"{u['Name']} — {res['result']} ({res['percent']}%)")
+        f"{u['Name']} - {res['result']} ({res['percent']}%)")
 
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Score", f"{res['correct']}/{res['total']}")
@@ -239,38 +252,75 @@ def page_result():
             subset=["Status"]),
         hide_index=True, width="stretch")
 
-    st.download_button("⬇️ Download PDF Report", build_pdf(
+    st.download_button("Download PDF Report", build_pdf(
         {k: u[k] for k in ("Name", "Designation", "Mobile", "District", "Email")}, res),
         file_name=f"EVM_Result_{u['Mobile']}.pdf", mime="application/pdf")
-    st.download_button("⬇️ Download Excel/CSV", df.to_csv(index=False).encode("utf-8-sig"),
-                       file_name=f"EVM_Result_{u['Mobile']}.csv", mime="text/csv")
+
+
+def to_excel(df: pd.DataFrame) -> bytes:
+    buf = BytesIO()
+    with pd.ExcelWriter(buf, engine="openpyxl") as w:
+        df.to_excel(w, index=False, sheet_name="Results")
+    return buf.getvalue()
 
 
 def page_admin():
-    st.title("🔐 Admin - All Results")
+    st.title("🔐 Admin Dashboard")
     try:
         admin_pw = st.secrets["ADMIN_PASSWORD"]
     except Exception:
-        st.warning("ADMIN_PASSWORD secrets mein set nahi hai (README dekhiye).")
+        st.warning("ADMIN_PASSWORD is not set in Secrets (see README).")
         return
-    if st.text_input("Password", type="password") != admin_pw:
+    if not st.session_state.get("admin_ok"):
+        with st.form("admin_login"):
+            pw = st.text_input("Admin Password", type="password")
+            ok = st.form_submit_button("Login", type="primary")
+        if ok:
+            if hmac.compare_digest(pw, str(admin_pw)):
+                st.session_state.admin_ok = True
+                st.rerun()
+            else:
+                st.error("Wrong password.")
         return
+
     df = load_results()
     if df.empty:
-        st.info("Abhi tak koi result nahi aaya.")
+        st.info("No results yet.")
         return
-    c1, c2, c3 = st.columns(3)
+    df = df.rename(columns={"Percent": "Percent (%)"})
+
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("Total Candidates", len(df))
-    c2.metric("Average %", round(df["Percent"].mean(), 2))
-    c3.metric("Pass", int((df["Result"] == "PASS").sum()))
-    st.dataframe(df, hide_index=True, width="stretch")
-    st.bar_chart(df.groupby("District")["Percent"].mean())
-    st.download_button("⬇️ Download all results (CSV)", df.to_csv(index=False).encode("utf-8-sig"),
-                       file_name="all_results.csv", mime="text/csv")
+    c2.metric("Pass", int((df["Result"] == "PASS").sum()))
+    c3.metric("Fail", int((df["Result"] == "FAIL").sum()))
+    c4.metric("Average %", round(df["Percent (%)"].mean(), 2))
+
+    f1, f2 = st.columns(2)
+    district = f1.selectbox("District", ["All"] + sorted(df["District"].unique()))
+    search = f2.text_input("Search (name / mobile / email)")
+    view = df if district == "All" else df[df["District"] == district]
+    if search.strip():
+        t = search.strip().lower()
+        view = view[view[["Name", "Mobile", "Email"]].astype(str).apply(
+            lambda c: c.str.lower().str.contains(t, regex=False)).any(axis=1)]
+
+    cols = ["Name", "Designation", "Mobile", "District", "Email", "Score", "Total",
+            "Percent (%)", "Result", "Correct", "Wrong", "Not Attempted", "Timestamp"]
+    view = view[cols].reset_index(drop=True)
+    view.index += 1
+    st.dataframe(view, width="stretch")
+    st.caption(f"Showing {len(view)} of {len(df)} candidates")
+
+    st.download_button("Download Results (Excel)", to_excel(view),
+                       file_name="EVM_All_Results.xlsx",
+                       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+    if st.button("Logout"):
+        st.session_state.admin_ok = False
+        st.rerun()
 
 
 # ---------------------------------------------------------------- router
-if st.query_params.get("page") == "admin":   # URL: ?page=admin
+if st.query_params.get("page") == "admin":   # URL: <app link>/?page=admin
     page_admin()
 else:
     st.session_state.setdefault("stage", "register")
