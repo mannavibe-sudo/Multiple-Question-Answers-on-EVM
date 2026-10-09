@@ -300,8 +300,14 @@ def to_excel(df: pd.DataFrame) -> bytes:
     return buf.getvalue()
 
 
+ADMIN_NOTE = ("🔒 **Restricted - for authorised CEO Office / Admin officials only.**  \n"
+              "Candidates do NOT need to log in here. Please fill the form on the main "
+              "page to take your exam.")
+
+
 def admin_login_form(key: str):
     """Password form. Data is shown only after a correct password."""
+    st.caption(ADMIN_NOTE)
     try:
         admin_pw = str(st.secrets["ADMIN_PASSWORD"])
     except Exception:
@@ -379,7 +385,7 @@ with st.sidebar:
             st.session_state.admin_ok = False
             st.rerun()
     else:
-        with st.expander("Admin Login"):
+        with st.expander("Admin Login (CEO Office use only)"):
             admin_login_form("admin_login_side")
 
 if admin_ok:
