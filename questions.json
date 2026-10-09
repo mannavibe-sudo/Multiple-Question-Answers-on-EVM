@@ -1,0 +1,438 @@
+[
+  {
+    "id": 1,
+    "question": "Who is the custodian of EVMs under Rule 92 of the Conduct of Elections Rules 1961?",
+    "options": [
+      "ECI",
+      "CEO",
+      "DEO",
+      "RO"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 2,
+    "question": "Who is the custodian of the keys of the EVM strong room having FLC ok units?",
+    "options": [
+      "DEO & Dy. DEO",
+      "DEO & RO",
+      "RO & ARO",
+      "DEO & Strong Room-in-charge"
+    ],
+    "answer": 0
+  },
+  {
+    "id": 3,
+    "question": "Who will be the custodian of keys of the EVM strong room after second randomization of EVMs?",
+    "options": [
+      "DEO & Dy. DEO",
+      "RO & ARO",
+      "DEO & RO",
+      "Officers nominated by the DEO"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 4,
+    "question": "Who may be appointed as FLC supervisor?",
+    "options": [
+      "Only Dy. DEO",
+      "Only Addl. DEO",
+      "Officer above the rank of Dy. DEO",
+      "Officer not below the rank of Dy. DEO"
+    ],
+    "answer": 3
+  },
+  {
+    "id": 5,
+    "question": "Minimum armed security of EVM warehouse/strong room from FLC to Poll Day?",
+    "options": [
+      "1/2 Section",
+      "1 Section",
+      "1 platoon",
+      "1 coy"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 6,
+    "question": "Minimum armed security of EVM warehouse/strong room having polled EVMs?",
+    "options": [
+      "1/2 Section",
+      "1 Section",
+      "1 platoon",
+      "1 coy"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 7,
+    "question": "Which of the following is not correct regarding number of votes given in mock poll during FLC ?",
+    "options": [
+      "1000 votes in 2%",
+      "1200 votes in 1%",
+      "500 votes in 2%",
+      "1000 votes in 5%"
+    ],
+    "answer": 3
+  },
+  {
+    "id": 8,
+    "question": "FLC rejected units shall be sent to the manufacturer concerned within……… of completion of FLC in the district.",
+    "options": [
+      "5 days",
+      "7 days",
+      "10 days",
+      "12 days"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 9,
+    "question": "Physical awareness of EVMs can be conducted till",
+    "options": [
+      "Date of issuance of election notification",
+      "Date of announcement of election by ECI",
+      "Before poll day",
+      "None of the above"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 10,
+    "question": "How many mobiles are allowed in the FLC Hall?",
+    "options": [
+      "2",
+      "3",
+      "4",
+      "As per discretion of DEO"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 11,
+    "question": "Who is conducting third party testing of EVMs?",
+    "options": [
+      "Technical Expert Committee (TEC)",
+      "STQC",
+      "An independent unit of the manufacturer",
+      "None of the above"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 12,
+    "question": "After completion of poll, reserve EVMs are kept in",
+    "options": [
+      "In the strong room where polled EVMs are kept",
+      "In the adjacent strong room of polled strong room",
+      "In the separate strong room not in the premises of the polled strong room",
+      "None of the above"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 13,
+    "question": "You got a VVPAT slip- can you find out where would be the present location of the particular VVPAT?",
+    "options": [
+      "Yes",
+      "No"
+    ],
+    "answer": 0
+  },
+  {
+    "id": 14,
+    "question": "FLC timing is from",
+    "options": [
+      "7 am to 5 pm",
+      "9 am to 5 pm",
+      "9 am to 7 pm",
+      "None of the above"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 15,
+    "question": "Minimum size of TV/Monitor to be used to display loading of symbols in VVPATs",
+    "options": [
+      "18 inch",
+      "24 inch",
+      "30 inch",
+      "36 inch"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 16,
+    "question": "VVPAT slips printed during FLC are kept in",
+    "options": [
+      "Black envelope",
+      "Red envelope",
+      "Green envelope",
+      "None of the above"
+    ],
+    "answer": 3
+  },
+  {
+    "id": 17,
+    "question": "Green Paper Seal is used in FLC for sealing of……….",
+    "options": [
+      "BU",
+      "CU",
+      "VVPAT",
+      "None of the above"
+    ],
+    "answer": 3
+  },
+  {
+    "id": 18,
+    "question": "Full form of P-FLCU",
+    "options": [
+      "Pre-First Level Checking Unit",
+      "Preferential-First Level Checking Unit",
+      "Printed-First Level Checking Unit",
+      "Post-First Level Checking Unit"
+    ],
+    "answer": 0
+  },
+  {
+    "id": 19,
+    "question": "Intimation to National and State Recognised Political Parties for FLC is given to",
+    "options": [
+      "District Head Quarters",
+      "State Head Quarters",
+      "Both (a) and (b)",
+      "National Head Quarters"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 20,
+    "question": "State Recognised Political Parties in other States can attend FLC process in your State",
+    "options": [
+      "Yes",
+      "No"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 21,
+    "question": "Colour of sticker to be pasted on reserve machine of Assembly election will be",
+    "options": [
+      "White",
+      "Yellow",
+      "Pink",
+      "Orange"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 22,
+    "question": "1st Randomization of EVMs of EVMs is conducted by DEO in the presence of",
+    "options": [
+      "National and State Recognized political parties",
+      "Candidates",
+      "ECI Observer",
+      "Both (a & c)"
+    ],
+    "answer": 0
+  },
+  {
+    "id": 23,
+    "question": "Upto10% of EVMs are taken out for Training & Awareness after FLC. This percentage is calculated on",
+    "options": [
+      "No. of CU in the district",
+      "No. of Polling Stations in the district",
+      "No. of FLC OK units",
+      "No. of VVPATs in the district"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 24,
+    "question": "Which of the following paper seal is used at the time of FLC",
+    "options": [
+      "Green Paper Seal",
+      "Pink Paper Seal",
+      "Address Tag",
+      "No seal is used"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 25,
+    "question": "What is the full form of SLU?",
+    "options": [
+      "Symbol Logical Unit",
+      "Symbol Loading Unit",
+      "System Logical Unit",
+      "System Loading Unit"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 26,
+    "question": "When Session number in VVPAT slip will be changed?",
+    "options": [
+      "When EVM is switched on",
+      "When symbol is loaded in VVPAT",
+      "Both (a & b)",
+      "None of the above"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 27,
+    "question": "What is the full form of UADM",
+    "options": [
+      "Unauthorised Assess Detection Module",
+      "Unauthorised Accessible Detection Module",
+      "Unauthorised Accept Detection Module",
+      "Unauthorised Access Detection Module"
+    ],
+    "answer": 3
+  },
+  {
+    "id": 28,
+    "question": "During non-election period, recording of CCTV camera is kept in DVR for a period of …………",
+    "options": [
+      "7 days",
+      "15 days",
+      "30 days",
+      "45 days"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 29,
+    "question": "Quarterly inspection of EVM warehouse is done by the DEO in the months of",
+    "options": [
+      "January, April, July and October",
+      "February, May, August and November",
+      "March, June, September and December",
+      "None of the above"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 30,
+    "question": "Regarding transportation of EVMs which one is not correct?",
+    "options": [
+      "Use only containerized vehicle",
+      "Use of GPS enabled vehicle",
+      "Escort to vehicle carrying EVMs",
+      "Political Parties are allowed to follow the vehicle carrying EVMs"
+    ],
+    "answer": 3
+  },
+  {
+    "id": 31,
+    "question": "Which one is not correct about Training & Awareness EVMs?",
+    "options": [
+      "Yellow sticker is used",
+      "Kept in separate designated warehouse",
+      "Political Parties are invited whenever T&A EVMs warehouse is opened",
+      "List of T&A EVMs is provided to Recognized political parties"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 32,
+    "question": "Which one is not correct about intermediate strong room?",
+    "options": [
+      "A Nodal Officer is appointed",
+      "Minimum half section armed security deployed",
+      "Log book is maintained",
+      "Only Reserve EVMs are kept"
+    ],
+    "answer": 3
+  },
+  {
+    "id": 33,
+    "question": "In mock poll in commissioning which one is correct?",
+    "options": [
+      "100 votes in 5% EVMs",
+      "500 votes in 5% EVMs",
+      "1000 votes in 5% EVMs",
+      "1200 votes in 5% EVMs"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 34,
+    "question": "Regarding Mock poll on poll day which one is not correct?",
+    "options": [
+      "At least 50 votes are cast",
+      "Mock poll is started 90 minutes before actual poll",
+      "Copy of Mock poll certificate is given to Polling Agents",
+      "Mock poll VVPAT slips are kept in black envelope"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 35,
+    "question": "Regarding Form 17-C which one is correct?",
+    "options": [
+      "Copy of Form-17 C is given to all Recognized Political Parties",
+      "Copy of Form-17C is given to all contesting candidates",
+      "Copy of Form 17-C is given to Polling Agents present at polling stations",
+      "Copy of Form-17C is not share with anyone"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 36,
+    "question": "Regarding non- display of result from CU, which one is not correct?",
+    "options": [
+      "New Power Pack is installed",
+      "VVPAT slips are counted",
+      "VVPAT slips are counted only if winning margin is less",
+      "None of the above"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 37,
+    "question": "Pink Paper Seal is used in sealing Ballot Unit at the time of",
+    "options": [
+      "First Level Checking",
+      "Commissioning",
+      "After Mock Poll",
+      "After Counting of Votes"
+    ],
+    "answer": 1
+  },
+  {
+    "id": 38,
+    "question": "Green Paper Seal is used to seal which section of the Control Unit",
+    "options": [
+      "Candidate Set Section",
+      "Battery Section",
+      "Result Section",
+      "Ballot Section"
+    ],
+    "answer": 2
+  },
+  {
+    "id": 39,
+    "question": "In case Control Unit is found non-functional during Mock Poll then replacement protocol will be …",
+    "options": [
+      "Only CU will be changed",
+      "BU & CU will be changed",
+      "BU, CU & VVPAT will be changed",
+      "None of the above"
+    ],
+    "answer": 0
+  },
+  {
+    "id": 40,
+    "question": "In case VVPAT is found non-functional during actual poll the replacement protocol will be …",
+    "options": [
+      "Only VVPAT will be changed",
+      "BU, CU and VVPAT will be changed",
+      "Only CU & VVPAT will be changed",
+      "None of the above"
+    ],
+    "answer": 0
+  }
+]
