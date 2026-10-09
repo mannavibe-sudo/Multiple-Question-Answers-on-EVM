@@ -11,8 +11,6 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from fpdf import FPDF
-from fpdf.fonts import FontFace
 
 BASE = Path(__file__).parent
 QUESTIONS = json.loads((BASE / "questions.json").read_text(encoding="utf-8"))
@@ -35,16 +33,24 @@ def valid_email(e: str) -> bool:
     return bool(re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", e))
 
 
-def db():
-    """SQLite connection. Mobile is PRIMARY KEY and Email is UNIQUE, so one mobile /
-    one email can never have two attempts, even if many people submit together."""
+@st.cache_resource
+def init_db() -> bool:
+    """Runs once per server start: creates the table. Mobile is PRIMARY KEY and Email is
+    UNIQUE, so one mobile / one email can never have two attempts, even if many people
+    submit at the same moment."""
     con = sqlite3.connect(DB_FILE, timeout=30)
     con.execute("PRAGMA journal_mode=WAL")
     con.execute("""CREATE TABLE IF NOT EXISTS results (
         Mobile TEXT PRIMARY KEY, Timestamp TEXT, Name TEXT, Designation TEXT,
         District TEXT, Email TEXT UNIQUE, Score INT, Total INT, Percent REAL,
         Correct INT, Wrong INT, "Not Attempted" INT, Result TEXT)""")
-    return con
+    con.close()
+    return True
+
+
+def db():
+    init_db()
+    return sqlite3.connect(DB_FILE, timeout=30)
 
 
 def load_results() -> pd.DataFrame:
@@ -141,6 +147,7 @@ def pdf_safe(text: str) -> str:
 
 
 def build_pdf(user: dict, res: dict) -> bytes:
+    from fpdf import FPDF
     pdf = FPDF()
     pdf.set_auto_page_break(True, 15)
     pdf.add_page()
@@ -274,12 +281,17 @@ def page_result():
             subset=["Status"]),
         hide_index=True, width="stretch")
 
-    st.download_button("Download PDF Report", build_pdf(
-        {k: u[k] for k in ("Name", "Designation", "Mobile", "District", "Email")}, res),
-        file_name=f"EVM_Result_{u['Mobile']}.pdf", mime="application/pdf")
+    if "my_pdf" not in st.session_state:
+        st.session_state.my_pdf = build_pdf(
+            {k: u[k] for k in ("Name", "Designation", "Mobile", "District", "Email")}, res)
+    st.download_button("Download PDF Report", st.session_state.my_pdf,
+                       file_name=f"EVM_Result_{u['Mobile']}.pdf", mime="application/pdf")
 
 
+@st.cache_data(show_spinner=False)
 def build_admin_pdf(view: pd.DataFrame, stats: dict, district: str) -> bytes:
+    from fpdf import FPDF
+    from fpdf.fonts import FontFace
     """Landscape PDF: summary + candidates list (whatever is currently filtered)."""
     pdf = FPDF(orientation="L", format="A4")
     pdf.set_auto_page_break(True, 12)
@@ -314,6 +326,7 @@ def build_admin_pdf(view: pd.DataFrame, stats: dict, district: str) -> bytes:
     return bytes(pdf.output())
 
 
+@st.cache_data(show_spinner=False)
 def to_excel(df: pd.DataFrame) -> bytes:
     buf = BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as w:
