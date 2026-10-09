@@ -264,36 +264,40 @@ def to_excel(df: pd.DataFrame) -> bytes:
     return buf.getvalue()
 
 
-def page_admin():
-    st.title("🔐 Admin Dashboard")
+def admin_login_form(key: str):
+    """Password form. Data is shown only after a correct password."""
     try:
-        admin_pw = st.secrets["ADMIN_PASSWORD"]
+        admin_pw = str(st.secrets["ADMIN_PASSWORD"])
     except Exception:
-        st.warning("ADMIN_PASSWORD is not set in Secrets (see README).")
+        st.warning("ADMIN_PASSWORD is not set. Add it in the app's Settings > Secrets.")
         return
-    if not st.session_state.get("admin_ok"):
-        with st.form("admin_login"):
-            pw = st.text_input("Admin Password", type="password")
-            ok = st.form_submit_button("Login", type="primary")
-        if ok:
-            if hmac.compare_digest(pw, str(admin_pw)):
-                st.session_state.admin_ok = True
-                st.rerun()
-            else:
-                st.error("Wrong password.")
-        return
+    with st.form(key):
+        pw = st.text_input("Admin Password", type="password")
+        ok = st.form_submit_button("Login", type="primary")
+    if ok:
+        if hmac.compare_digest(pw, admin_pw):
+            st.session_state.admin_ok = True
+            st.rerun()
+        else:
+            st.error("Wrong password.")
 
-    df = load_results()
-    if df.empty:
-        st.info("No results yet.")
-        return
-    df = df.rename(columns={"Percent": "Percent (%)"})
+
+def page_admin():
+    st.title("📋 Admin Dashboard")
+    df = load_results().rename(columns={"Percent": "Percent (%)"})
+    total = len(df)
 
     c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Total Candidates", len(df))
-    c2.metric("Pass", int((df["Result"] == "PASS").sum()))
-    c3.metric("Fail", int((df["Result"] == "FAIL").sum()))
-    c4.metric("Average %", round(df["Percent (%)"].mean(), 2))
+    c1.metric("Total Exams Taken", total)
+    c2.metric("Pass", int((df["Result"] == "PASS").sum()) if total else 0)
+    c3.metric("Fail", int((df["Result"] == "FAIL").sum()) if total else 0)
+    c4.metric("Average %", round(df["Percent (%)"].mean(), 2) if total else 0)
+
+    if df.empty:
+        st.info("No candidate has submitted the exam yet. Results will appear here automatically.")
+        if st.button("Refresh"):
+            st.rerun()
+        return
 
     f1, f2 = st.columns(2)
     district = f1.selectbox("District", ["All"] + sorted(df["District"].unique()))
@@ -308,20 +312,37 @@ def page_admin():
             "Percent (%)", "Result", "Correct", "Wrong", "Not Attempted", "Timestamp"]
     view = view[cols].reset_index(drop=True)
     view.index += 1
+    st.subheader("Candidates List")
     st.dataframe(view, width="stretch")
-    st.caption(f"Showing {len(view)} of {len(df)} candidates")
+    st.caption(f"Showing {len(view)} of {total} candidates")
 
-    st.download_button("Download Results (Excel)", to_excel(view),
+    d1, d2 = st.columns([1, 1])
+    d1.download_button("Download Results (Excel)", to_excel(view),
                        file_name="EVM_All_Results.xlsx",
                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    if st.button("Logout"):
-        st.session_state.admin_ok = False
+    if d2.button("Refresh"):
         st.rerun()
 
 
 # ---------------------------------------------------------------- router
-if st.query_params.get("page") == "admin":   # URL: <app link>/?page=admin
+admin_ok = st.session_state.get("admin_ok", False)
+
+# Sidebar: admin login / logout (candidates only see a password box, never any data)
+with st.sidebar:
+    if admin_ok:
+        st.success("Logged in as Admin")
+        if st.button("Logout"):
+            st.session_state.admin_ok = False
+            st.rerun()
+    else:
+        with st.expander("Admin Login"):
+            admin_login_form("admin_login_side")
+
+if admin_ok:
     page_admin()
+elif st.query_params.get("page") == "admin":      # direct link: <app link>/?page=admin
+    st.title("🔐 Admin Login")
+    admin_login_form("admin_login_main")
 else:
     st.session_state.setdefault("stage", "register")
     {"register": page_register, "quiz": page_quiz, "result": page_result}[st.session_state.stage]()
