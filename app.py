@@ -55,6 +55,27 @@ def load_results() -> pd.DataFrame:
         con.close()
 
 
+def delete_entries(mobiles: list) -> int:
+    """Delete the given candidates (by mobile). They can then take the exam again."""
+    con = db()
+    try:
+        with con:
+            cur = con.executemany("DELETE FROM results WHERE Mobile=?", [(m,) for m in mobiles])
+        return cur.rowcount if cur.rowcount >= 0 else len(mobiles)
+    finally:
+        con.close()
+
+
+def delete_all_entries() -> int:
+    con = db()
+    try:
+        with con:
+            cur = con.execute("DELETE FROM results")
+        return cur.rowcount
+    finally:
+        con.close()
+
+
 def used_fields(mobile: str, email: str) -> list:
     """Returns which of mobile / email were already used for an attempt."""
     con = db()
@@ -326,6 +347,8 @@ def admin_login_form(key: str):
 
 def page_admin():
     st.title("📋 Admin Dashboard")
+    if st.session_state.get("flash"):
+        st.success(st.session_state.pop("flash"))
     df = load_results().rename(columns={"Percent": "Percent (%)"})
     total = len(df)
 
@@ -372,6 +395,32 @@ def page_admin():
                        file_name="EVM_All_Results.pdf", mime="application/pdf")
     if d3.button("Refresh"):
         st.rerun()
+
+    # ---------------- delete entries
+    st.divider()
+    with st.expander("🗑️ Delete Entries (allows the same Mobile / Email to take the exam again)"):
+        st.warning("Deleted entries disappear from all reports permanently. "
+                   "Download the Excel/PDF report first if you need a record.")
+        n = st.session_state.get("del_n", 0)
+        labels = {r.Mobile: f"{r.Name} | {r.Mobile} | {r.Email} | {r.District}"
+                  for r in df.itertuples()}
+        picked = st.multiselect("Select candidate(s) to delete", list(labels),
+                                format_func=lambda m: labels[m], key=f"del_sel_{n}")
+        sure = st.checkbox("Yes, delete the selected entries", key=f"del_ok_{n}")
+        if st.button("Delete Selected", type="primary", disabled=not (picked and sure)):
+            cnt = delete_entries(picked)
+            st.session_state.flash = f"{cnt} entr{'y' if cnt == 1 else 'ies'} deleted."
+            st.session_state.del_n = n + 1
+            st.rerun()
+
+        st.markdown("---")
+        st.caption("Delete ALL entries (for example, to remove test entries before the real exam).")
+        word = st.text_input("Type DELETE ALL to confirm", key=f"del_all_{n}")
+        if st.button("Delete All Entries", disabled=word.strip() != "DELETE ALL"):
+            cnt = delete_all_entries()
+            st.session_state.flash = f"All entries deleted ({cnt})."
+            st.session_state.del_n = n + 1
+            st.rerun()
 
 
 # ---------------------------------------------------------------- router
